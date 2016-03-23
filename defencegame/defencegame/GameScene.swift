@@ -89,7 +89,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //enemies.append(enemy)
         enemyList.appendEnemy(enemy)
     }
-    
+    //衝突
     func didBeginContact(contact: SKPhysicsContact) {
         [contact.bodyA, contact.bodyB].forEach {
             if $0.node?.name == "enemy" {
