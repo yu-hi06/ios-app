@@ -10,7 +10,12 @@ import UIKit
 import SpriteKit
 class EnemyList {
     private var enemies = [SKSpriteNode]()
-    
+    func count() -> Int {
+        return enemies.count
+    }
+    func Enemies(Integer: Int) -> SKSpriteNode{
+        return enemies[Integer]
+    }
     func appendEnemy(enemy: SKSpriteNode) {
         enemies.append(enemy)
     }

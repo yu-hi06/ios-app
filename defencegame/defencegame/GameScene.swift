@@ -19,7 +19,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var enemyList = EnemyList()
     let char = SKSpriteNode(imageNamed: "Char")
     var routes = [float2]()
-    
+    var shotLayer = SKSpriteNode()
     override func didMoveToView(view: SKView) {
         physicsWorld.gravity = CGVectorMake(0, 0)
         physicsWorld.contactDelegate = self
@@ -28,12 +28,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         field.nodes.forEach {
             addChild($0)
         }
-       
+        //主人公の作成
         char.position = CGPoint(x:250, y:300)
         char.physicsBody = SKPhysicsBody(rectangleOfSize: char.size)
-        char.physicsBody?.contactTestBitMask = 0x1
+        char.physicsBody?.categoryBitMask = 0x1
+        char.physicsBody?.collisionBitMask = 0x10
         char.name = "Char"
         addChild(char)
+        //弾レイヤーの作成
+        //shotLayer = SKSpriteNode(color: SKColor.clearColor(), size: CGSizeMake(360,640))
+        //shotLayer.anchorPoint = CGPointMake(0, 0)
+        self.addChild(shotLayer)
+        
         
         routes = routesWithField(field)
         // 敵を10体出現させる処理
@@ -75,6 +81,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         enemy.name = "enemy"
         enemy.position = CGPoint(x: fieldImageLength * 2, y: view.frame.height)
         enemy.physicsBody = SKPhysicsBody(rectangleOfSize: enemy.size)
+        enemy.physicsBody?.contactTestBitMask = 0xFFFFFFFF
         enemy.runAction(SKAction.sequence(actions)) {
             self.state = .GameOver
             
@@ -91,12 +98,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     //衝突
     func didBeginContact(contact: SKPhysicsContact) {
-        [contact.bodyA, contact.bodyB].forEach {
-            if $0.node?.name == "enemy" {
-                $0.node?.removeFromParent()
-                $0.node?.removeAllActions()
-            }
+        var contactlist = [contact.bodyA, contact.bodyB]
+        print(contactlist[0].node?.name)
+        print(contactlist[1].node?.name)
+        if contactlist[0].node?.name == "enemy" && contactlist[1].node?.name == "sht1"{
+                contactlist[0].node?.removeFromParent()
+                contactlist[0].node?.removeAllActions()
+                contactlist[1].node?.removeFromParent()
+                contactlist[1].node?.removeAllActions()
         }
+        if contactlist[1].node?.name == "enemy" && contactlist[0].node?.name == "sht1"{
+            contactlist[0].node?.removeFromParent()
+            contactlist[0].node?.removeAllActions()
+            contactlist[1].node?.removeFromParent()
+            contactlist[1].node?.removeAllActions()
+        }
+
+
         
         if enemyList.isAllEnemyRemoved() {
             state = .GameClear
@@ -120,13 +138,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if movestatus == "Char" {
             let touchPos = touches.first!.locationInNode(self)
-            char.runAction(SKAction.moveTo(touchPos, duration:0.1))
+            char.runAction(SKAction.moveTo(touchPos, duration:0.0))
         }
     }
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if movestatus == "Char" {
             movestatus = "non"
+            addShot()
         }
+    }
+    override func didEvaluateActions() {
+        for (var i = 0; i < shotLayer.children.count; i++) {
+            let shot = shotLayer.children[i] as! SKSpriteNode
+            if shot.position.x == 0 || shot.position.x >= 480{
+                shot.removeFromParent()
+            }
+        }
+    }
+    //弾の追加
+    func addShot() {
+        let shot = SKSpriteNode(imageNamed: "sht1")
+        shot.position = CGPointMake(char.position.x, char.position.y)
+        shot.physicsBody = SKPhysicsBody(rectangleOfSize: shot.size)
+        shot.physicsBody?.categoryBitMask = 0x1
+        shot.physicsBody?.collisionBitMask = 0x10
+        //shot.physicsBody?.dynamic = false
+        shot.name="sht1"
+        shot.runAction(SKAction.moveToX(0, duration: 3))
+        shotLayer.addChild(shot)
     }
     
 }
